@@ -12,3 +12,12 @@ sorting_dict = {'Documents': ['.pdf', '.docx', '.txt', '.pptx', '.xlsx', '.csv']
 
 home = Path.home()
 download_folder = home / 'Downloads'
+
+
+def check_for_folders():
+    for folder_name in sorting_dict.keys():
+        new_path = download_folder / folder_name
+
+        new_path.mkdir(parents=True, exist_ok=True)
+
+
