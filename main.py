@@ -7,7 +7,6 @@ sorting_dict = {'Documents': ['.pdf', '.docx', '.txt', '.pptx', '.xlsx', '.csv']
                 'Software': ['.exe', '.msi', '.dmg', '.pkg'],
                 'Compressed': ['.zip', '.rar', '.7z', '.tar', '.gz'],
                 'Music': ['.mp3', '.m4a', '.flac', '.wav', '.aac'],
-                'Misc': []
                 }
 
 home = Path.home()
@@ -20,6 +19,14 @@ def check_for_folders():
 
         new_path.mkdir(parents=True, exist_ok=True)
 
+    (download_folder/'Misc').mkdir(parents=True, exist_ok=True)
+
+
+def sort_files():
+    for item in download_folder.iterdir():
+
+        if item.is_dir() or item.name.startswith('.') or item.name == 'main.py':
+            continue
 
         if item.is_file() and not item.name.startswith('.') and item.name != 'main.py':
 
@@ -29,13 +36,26 @@ def check_for_folders():
                     dest_folder = folder_name
                     break
 
-            dir_path = download_folder / dest_folder / item.name
+            temp_path = download_folder / dest_folder / item.name
+
+            counter = 1
+
+            while temp_path.exists():
+                new_name = f'{item.stem}{counter}{item.suffix}'
+                temp_path = download_folder / dest_folder / new_name
+                counter += 1
+
+            dir_path = temp_path
 
             try:
                 shutil.move(item, dir_path)
             except PermissionError:
                 print(f"Skipping {item.name}, Permission denied, File is open elsewhere...")
             except FileExistsError:
-                print(f"File already exists in folder, renaming file to {item.stem}1{item.suffix}")
+                print(f'Skipping {item.name}, File already exists...')
             except OSError:
                 print(f"Could not move {item} to {dir_path}, OSError")
+
+if __name__ == '__main__':
+    check_for_folders()
+    sort_files()
