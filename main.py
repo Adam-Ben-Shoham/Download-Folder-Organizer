@@ -29,6 +29,11 @@ def check_for_folders():
 
     (download_folder/'Misc').mkdir(parents=True, exist_ok=True)
 
+def log_action(message):
+    log_path = download_folder / 'organizer_log.txt'
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    with open(log_path, "a") as f:
+        f.write(f"[{timestamp}] {message}\n")
 
 def sort_files():
     for item in download_folder.iterdir():
@@ -57,12 +62,13 @@ def sort_files():
 
             try:
                 shutil.move(item, dir_path)
+                log_action(f"Moved {item.name} to {dest_folder}")
             except PermissionError:
-                print(f"Skipping {item.name}, Permission denied, File is open elsewhere...")
+                log_action(f"Skipping {item.name}, Permission denied, File is open elsewhere...")
             except FileExistsError:
-                print(f'Skipping {item.name}, File already exists...')
+                log_action(f'Skipping {item.name}, File already exists...')
             except OSError:
-                print(f"Could not move {item} to {dir_path}, OSError")
+                log_action(f"Could not move {item} to {dir_path}, OSError")
 
 if __name__ == '__main__':
 
@@ -79,6 +85,7 @@ if __name__ == '__main__':
             time.sleep(10)
     except KeyboardInterrupt:
         observer.stop()
-        print('Stopping organizer')
+        print('Stopping organizer...\n')
+        time.sleep(0.5)
     observer.join()
     print('Process terminated.')
