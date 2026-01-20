@@ -19,13 +19,14 @@ download_folder = home / 'Downloads'
 class MyHandler(FileSystemEventHandler):
 
     def on_created(self, event):
-        log_action(f'Event detected: {event.src_path}')
+        if event.is_directory or Path(event.src_path).name == 'organizer_log.txt':
+            return
+        log_action(f'New file detected: {Path(event.src_path).name}')
         time.sleep(4)
         sort_files()
 
     def on_modified(self, event):
-        if not event.is_directory:
-            sort_files()
+        pass
 
 
 def check_for_folders():
@@ -40,7 +41,7 @@ def check_for_folders():
 def log_action(message):
     log_path = download_folder / 'organizer_log.txt'
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-    with open(log_path, "a") as f:
+    with open(log_path, "a",encoding='utf-8') as f:
         f.write(f"[{timestamp}] {message}\n")
         f.flush()
 
@@ -48,7 +49,7 @@ def log_action(message):
 def sort_files():
     for item in download_folder.iterdir():
 
-        if item.is_dir() or item.name.startswith('.') or item.name == 'main.py':
+        if item.is_dir() or item.name.startswith('.') or item.name == 'main.py' or item.name == 'organizer_log.txt':
             continue
 
         if item.is_file() and not item.name.startswith('.') and item.name != 'main.py':
@@ -88,15 +89,20 @@ if __name__ == '__main__':
 
     handler = MyHandler()
     observer = Observer()
-    observer.schedule(handler, path=download_folder, recursive=False)
+    observer.schedule(handler, path=str(download_folder), recursive=False)
     observer.start()
 
     try:
-        while True:
-            time.sleep(10)
+        while observer.is_alive():
+            time.sleep(2)
+
     except KeyboardInterrupt:
         observer.stop()
         print('Stopping organizer...\n')
-        time.sleep(0.5)
+
+    except Exception as e:
+        log_action(f'Error occurred: {e}')
+        observer.stop()
+
     observer.join()
     print('Process terminated.')
