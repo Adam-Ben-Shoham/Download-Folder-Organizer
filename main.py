@@ -1,5 +1,8 @@
+import time
 from pathlib import Path
 import shutil
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 sorting_dict = {'Documents': ['.pdf', '.docx', '.txt', '.pptx', '.xlsx', '.csv'],
                 'Images': ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.tiff'],
@@ -11,6 +14,11 @@ sorting_dict = {'Documents': ['.pdf', '.docx', '.txt', '.pptx', '.xlsx', '.csv']
 
 home = Path.home()
 download_folder = home / 'Downloads'
+
+class MyHandler(FileSystemEventHandler):
+    def on_modified(self,event):
+        time.sleep(4)
+        sort_files()
 
 
 def check_for_folders():
@@ -57,5 +65,20 @@ def sort_files():
                 print(f"Could not move {item} to {dir_path}, OSError")
 
 if __name__ == '__main__':
+
     check_for_folders()
     sort_files()
+
+    handler = MyHandler()
+    observer = Observer()
+    observer.schedule(handler, path=download_folder, recursive=False)
+    observer.start()
+
+    try:
+        while True:
+            time.sleep(10)
+    except KeyboardInterrupt:
+        observer.stop()
+        print('Stopping organizer')
+    observer.join()
+    print('Process terminated.')
