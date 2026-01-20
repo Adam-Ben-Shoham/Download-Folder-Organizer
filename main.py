@@ -15,10 +15,17 @@ sorting_dict = {'Documents': ['.pdf', '.docx', '.txt', '.pptx', '.xlsx', '.csv']
 home = Path.home()
 download_folder = home / 'Downloads'
 
+
 class MyHandler(FileSystemEventHandler):
-    def on_modified(self,event):
+
+    def on_created(self, event):
+        log_action(f'Event detected: {event.src_path}')
         time.sleep(4)
         sort_files()
+
+    def on_modified(self, event):
+        if not event.is_directory:
+            sort_files()
 
 
 def check_for_folders():
@@ -27,13 +34,16 @@ def check_for_folders():
 
         new_path.mkdir(parents=True, exist_ok=True)
 
-    (download_folder/'Misc').mkdir(parents=True, exist_ok=True)
+    (download_folder / 'Misc').mkdir(parents=True, exist_ok=True)
+
 
 def log_action(message):
     log_path = download_folder / 'organizer_log.txt'
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     with open(log_path, "a") as f:
         f.write(f"[{timestamp}] {message}\n")
+        f.flush()
+
 
 def sort_files():
     for item in download_folder.iterdir():
@@ -69,6 +79,7 @@ def sort_files():
                 log_action(f'Skipping {item.name}, File already exists...')
             except OSError:
                 log_action(f"Could not move {item} to {dir_path}, OSError")
+
 
 if __name__ == '__main__':
 
