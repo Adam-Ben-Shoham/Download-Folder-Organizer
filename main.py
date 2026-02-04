@@ -21,6 +21,7 @@ class MyHandler(FileSystemEventHandler):
     def on_created(self, event):
         if event.is_directory or Path(event.src_path).name == 'organizer_log.txt':
             return
+
         log_action(f'New file detected: {Path(event.src_path).name}')
         time.sleep(4)
         sort_files()
@@ -51,6 +52,11 @@ def sort_files():
 
         if item.is_dir() or item.name.startswith('.') or item.name == 'main.py' or item.name == 'organizer_log.txt':
             continue
+
+        ignored_extensions = ['.tmp', '.crdownload', '.part', '.opdownload']
+
+        if item.suffix.lower() in ignored_extensions:
+            return
 
         if item.is_file() and not item.name.startswith('.') and item.name != 'main.py':
 
